@@ -7,6 +7,14 @@ format as input. The core of ECMPride was written in [R 3.6.1 language](https://
 
 ## The release version
 
+### ECMPride version v 1.2.0 (1/3/2020)
+
+- Update the positive dataset
+  - We introduced more ECMs validated by the proteomic experiment of the healthy samples
+  - We excluded some ECMs which appeared only in disease samples and don't have GO annotation of ECM.
+  - The total number of ECMs is changed from 478 to 521.
+- Update the prediction model.
+
 ### ECMPride version v 1.1.0 (12/4/2019)
 
 - Predictive model optimization: 99 submodels were used to solve the problem of unbalanced data sets;
