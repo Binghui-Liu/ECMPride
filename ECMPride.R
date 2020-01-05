@@ -1,6 +1,6 @@
 ####################################################################################
 # author: Binghui Liu
-# creation date: 2019-11-27
+# creation date: 2020-01-03
 # file description: Predict whether a specified human protein is ECM protein, 
 #                   and calculate the corresponding probability.
 #                   Run from the command line.
@@ -142,16 +142,16 @@ for (i in 2:length(prediction.result.submodel.list)) {
   prediction.result.submodel.df.prob <- cbind(prediction.result.submodel.df.prob, prediction.result.submodel.list[[i]][, 2:3])
 }
 prediction.result <- c()
-for (i in 1:dim(prediction.result.submodel.df)[1]) {
-  temp <- table(prediction.result.submodel.df[i, ])
-  index <- which.max(temp)
-  prediction.result.this.protein <- as.numeric(names(temp[index]))
-  if (prediction.result.this.protein == 1){
-    prediction.result[i] <- "ECM"
-  } else {
-    prediction.result[i] <- "nonECM"
-  }
-}
+# for (i in 1:dim(prediction.result.submodel.df)[1]) {
+#   temp <- table(prediction.result.submodel.df[i, ])
+#   index <- which.max(temp)
+#   prediction.result.this.protein <- as.numeric(names(temp[index]))
+#   if (prediction.result.this.protein == 1){
+#     prediction.result[i] <- "ECM"
+#   } else {
+#     prediction.result[i] <- "nonECM"
+#   }
+# }
 
 prediction.result.prob <- c()
 for (i in 1:dim(prediction.result.submodel.df.prob)[1]) {
@@ -163,11 +163,19 @@ for (i in 1:dim(prediction.result.submodel.df.prob)[1]) {
   }
   temp1.mean <- mean(temp1)
   temp2.mean <- mean(temp2)
-  if (prediction.result[i] == "ECM") {
+  
+  if (temp1.mean > temp2.mean) {
     prediction.result.prob[i] <- temp1.mean
+    prediction.result[i] <- "ECM"
   } else {
     prediction.result.prob[i] <- temp2.mean
+    prediction.result[i] <- "nonECM"
   }
+  # if (prediction.result[i] == "ECM") {
+  #   prediction.result.prob[i] <- temp1.mean
+  # } else {
+  #   prediction.result.prob[i] <- temp2.mean
+  # }
 }
 
 ID <- record.of.PP.human.sp.to.be.predicted[,1]
