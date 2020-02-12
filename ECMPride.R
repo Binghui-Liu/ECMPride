@@ -1,6 +1,7 @@
 ####################################################################################
 # author: Binghui Liu
 # creation date: 2020-01-03
+# modification date: 2020-02-12
 # file description: Predict whether a specified human protein is ECM protein, 
 #                   and calculate the corresponding probability.
 #                   Run from the command line.
@@ -13,6 +14,7 @@ file.arg.name <- "--file="
 script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
 script.basename <- dirname(script.name)
 absolute.path <- strsplit(script.name, "\\\\ECMPride.R")[[1]][1]  # Get the unzip path for the ECMPride package
+print(absolute.path)
 setwd(absolute.path) # Set the unzip path of the ECMPride package to the current working path
 
 args.arg.name <- "--args"
@@ -65,6 +67,14 @@ suppressMessages(isInstalled <- require(parallel))
 if (!isInstalled) {
   install.packages("parallel")
   suppressMessages(require(parallel))
+}
+########## load required function
+GetPredictionResult <- function(x) {
+  if (x[1] > x[2]) {
+    result <- c(x[1], "ECM")
+  } else {
+    result <- c(x[2], "nonECM")
+  }
 }
 
 ########## Show prediction progress
@@ -127,59 +137,33 @@ progress.bar$step()
 prediction.result.submodel.list <- list()
 for (i in 1:num.sub.model){
   set.seed(1)
-  test.of.ECMPride.rf <- predict(training.sub.models[[i]], part.of.test.data.feature)
-  test.of.ECMPride.rf <- data.frame(test.of.ECMPride.rf)
+  # test.of.ECMPride.rf <- predict(training.sub.models[[i]], part.of.test.data.feature)
+  # test.of.ECMPride.rf <- data.frame(test.of.ECMPride.rf)
   test.of.ECMPride.rf.prob <- predict(training.sub.models[[i]], part.of.test.data.feature, type = "prob")
   test.of.ECMPride.rf.prob <- data.frame(test.of.ECMPride.rf.prob)
-  prediction.result.submodel.list[[i]] <- cbind(test.of.ECMPride.rf, test.of.ECMPride.rf.prob)
+  # prediction.result.submodel.list[[i]] <- cbind(test.of.ECMPride.rf, test.of.ECMPride.rf.prob)
+  prediction.result.submodel.list[[i]] <- test.of.ECMPride.rf.prob
   progress.bar$step()
 }
 
-prediction.result.submodel.df <- prediction.result.submodel.list[[1]][, 1]
-prediction.result.submodel.df.prob <- prediction.result.submodel.list[[1]][, 2:3]
+# prediction.result.submodel.df <- prediction.result.submodel.list[[1]][, 1]
+prediction.result.submodel.df.prob <- prediction.result.submodel.list[[1]][, 1:2]
 for (i in 2:length(prediction.result.submodel.list)) {
-  prediction.result.submodel.df <- cbind(prediction.result.submodel.df, prediction.result.submodel.list[[i]][, 1])
-  prediction.result.submodel.df.prob <- cbind(prediction.result.submodel.df.prob, prediction.result.submodel.list[[i]][, 2:3])
+  # prediction.result.submodel.df <- cbind(prediction.result.submodel.df, prediction.result.submodel.list[[i]][, 1])
+  prediction.result.submodel.df.prob <- cbind(prediction.result.submodel.df.prob, prediction.result.submodel.list[[i]][, 1:2])
 }
-prediction.result <- c()
-# for (i in 1:dim(prediction.result.submodel.df)[1]) {
-#   temp <- table(prediction.result.submodel.df[i, ])
-#   index <- which.max(temp)
-#   prediction.result.this.protein <- as.numeric(names(temp[index]))
-#   if (prediction.result.this.protein == 1){
-#     prediction.result[i] <- "ECM"
-#   } else {
-#     prediction.result[i] <- "nonECM"
-#   }
-# }
-
-prediction.result.prob <- c()
-for (i in 1:dim(prediction.result.submodel.df.prob)[1]) {
-  temp1 <- c()
-  temp2 <- c()
-  for (m in 1:num.sub.model) {
-    temp1[m] <- prediction.result.submodel.df.prob[i, (2 * m - 1)]
-    temp2[m] <- prediction.result.submodel.df.prob[i, (2 * m)]
-  }
-  temp1.mean <- mean(temp1)
-  temp2.mean <- mean(temp2)
-  
-  if (temp1.mean > temp2.mean) {
-    prediction.result.prob[i] <- temp1.mean
-    prediction.result[i] <- "ECM"
-  } else {
-    prediction.result.prob[i] <- temp2.mean
-    prediction.result[i] <- "nonECM"
-  }
-  # if (prediction.result[i] == "ECM") {
-  #   prediction.result.prob[i] <- temp1.mean
-  # } else {
-  #   prediction.result.prob[i] <- temp2.mean
-  # }
-}
+temp.ncol <- ncol(prediction.result.submodel.df.prob)
+temp1.mean <- apply(as.matrix(prediction.result.submodel.df.prob[,seq(1, temp.ncol, 2)]),1,mean)
+temp2.mean <- apply(as.matrix(prediction.result.submodel.df.prob[,seq(2, temp.ncol, 2)]),1,mean)
+temp <- cbind(temp1.mean, temp2.mean)
+prediction.result <- apply(temp, 1, GetPredictionResult)
+prediction.result <- t(prediction.result)
 
 ID <- record.of.PP.human.sp.to.be.predicted[,1]
-prediction.result <- cbind(ID, data.frame(prediction.result), data.frame(prediction.result.prob))
+prediction.result <- cbind(ID,
+                           data.frame(prediction.result[,2]),
+                           data.frame(as.numeric(prediction.result[,1])))
+names(prediction.result) <- c("ID", "prediction.result", "prediction.result.prob")
 prediction.result.annotation <- cbind(prediction.result, record.of.annotation.to.be.predicted)
 names(prediction.result.annotation) <- c("ID", "prediction.result", "prediction.result.prob",
                                          "Gene.name", "label.human.protein.atlas", 
