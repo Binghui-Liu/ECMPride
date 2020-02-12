@@ -3,9 +3,15 @@
 ## What is it?
 
 ECMPride is a flexible and scalable tool developed for predicting extracellular matrix (ECM) proteins. ECMPride can directly perform ECM prediction by taking UniProt IDs in CSV (*.csv) file
-format as input. The core of ECMPride was written in [R 3.6.1 language](https://mirrors.tuna.tsinghua.edu.cn/CRAN/bin/windows/base/) on the [RStudio 1.1.442](https://rstudio.com/products/rstudio/download/) under Windows System. The function in ECMPride are based on [R statistical environment](https://www.r-project.org/).
+format as input. The core of ECMPride was written in [R 3.6.1 language](https://mirrors.tuna.tsinghua.edu.cn/CRAN/bin/windows/base/) on the [RStudio 1.1.442](https://rstudio.com/products/rstudio/download/) under Windows System. The function in ECMPride are based on [R statistical environment](https://www.r-project.org/). Both
+single-threaded and multi-threaded versions of ECMPride are provided here.
 
 ## The release version
+
+### ECMPride version v 1.3.0 (2/12/2020)
+
+- Optimize the algorithm of ECMPride to reduce execution time;
+- Provide the multi-thread version of ECMPride, which run faster when predicting large amount of proteins.
 
 ### ECMPride version v 1.2.0 (1/3/2020)
 
